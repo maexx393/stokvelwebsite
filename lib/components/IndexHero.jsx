@@ -1,9 +1,9 @@
-import React, { useContext, useState } from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ethers } from 'ethers'
 
-import { Trans, useTranslation } from 'lib/../i18n'
-import { PoolDataContext } from 'lib/components/contextProviders/PoolDataContextProvider'
+import { useTranslation } from 'lib/../i18n'
+import { useGraphPoolsQuery } from 'lib/hooks/useGraphPoolsQuery'
 import { ButtonLink } from 'lib/components/ButtonLink'
 import { WistiaPlayer } from 'lib/components/WistiaPlayer'
 import { displayAmountInEther } from 'lib/utils/displayAmountInEther'
@@ -19,14 +19,18 @@ export const IndexHero = (
 ) => {
   const { t } = useTranslation()
 
-  const poolDataContext = useContext(PoolDataContext)
-  const {
-    pools,
-  } = poolDataContext
+  const { status, data, error, isFetching } = useGraphPoolsQuery()
+
+  if (error) {
+    console.warn(error)
+  }
+
+  const pools = data?.pools
 
   let totalPrizes = ethers.utils.bigNumberify(0)
   pools?.forEach(_pool => {
     const decimals = _pool?.underlyingCollateralDecimals
+    if (!decimals) { return }
 
     const cumulativePrizeAmountsForPool = normalizeTo18Decimals(
       _pool.prizeEstimate,
@@ -39,12 +43,6 @@ export const IndexHero = (
   })
 
   const [playVideo, setPlayVideo] = useState(false)
-  // const poolDataContext = useContext(PoolDataContext)
-  // const {
-  //   loading,
-  //   pools,
-  //   // pool,
-  // } = poolDataContext
 
   const startVideo = (e) => {
     e.preventDefault()
@@ -64,8 +62,9 @@ export const IndexHero = (
           minHeight: 290
         }}
       >
-        <motion.h1
-          animate={totalPrizes.gt(0) ? 'enter' : 'exit'}
+        <motion.div
+          animate={'enter'}
+          // animate={totalPrizes.gt(0) ? 'enter' : 'exit'}
           initial='exit'
           variants={{
             enter: {
@@ -80,37 +79,31 @@ export const IndexHero = (
               height: 0,
             }
           }}
-          className='banner-text mx-auto font-bold text-center'
         >
-          <span className='text-flashy px-4 sm:leading-none'>Win ${displayAmountInEther(
-            totalPrizes,
-            { precision: 0 }
-          )} every week</span>
-          <div className='banner-text--small'>
-            just by saving your money.
-          </div>
-        </motion.h1>
-
-          {/* <Trans
-          i18nKey='youCouldWin'
-          defaults='You could <flashy>win ${{totalPrizes}} every week</flashy> just by saving your money.'
-          values={{ totalPrizes: '1,039' }}
-          components={{
-            flashy: <span className='text-flashy' />
-          }}
-        /> */}
-
-
-        <div
-          className='text-center'
-        >
-          <ButtonLink
-            href='https://app-v3.pooltogether.com'
-            as='https://app-v3.pooltogether.com'
+          <h1
+            className='banner-text mx-auto font-bold text-center'
           >
-            Get tickets!
-          </ButtonLink>
-        </div>
+            <span className='text-flashy px-4 sm:leading-none'>Win ${displayAmountInEther(
+              '1395000000000000000000',
+              // totalPrizes,
+              { precision: 0 }
+            )} every week</span>
+            <div className='banner-text--small'>
+              just by saving your money.
+            </div>
+          </h1>
+
+          <div
+            className='text-center'
+          >
+            <ButtonLink
+              href='https://app.pooltogether.com'
+              as='https://app.pooltogether.com'
+            >
+              Get tickets!
+            </ButtonLink>
+          </div>
+        </motion.div>
       </div>
 
       
@@ -159,7 +152,7 @@ export const IndexHero = (
                 />
 
                 <div
-                  className='bg-vid-circle flex items-center justify-center hover:bg-highlight-5 trans'
+                  className='bg-vid-circle flex items-center justify-center hover:bg-highlight-2 trans'
                 >
                   <div
                     className='bg-vid-tri'

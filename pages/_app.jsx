@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import * as Fathom from 'fathom-client'
 import { ToastContainer } from 'react-toastify'
 
-import { AllContextProviders } from 'lib/components/contextProviders/AllContextProviders'
 import { Layout } from 'lib/components/Layout'
-import { V3ApolloWrapper } from 'lib/components/V3ApolloWrapper'
 
 import 'react-toastify/dist/ReactToastify.css'
 import '@reach/dialog/styles.css'
@@ -51,6 +49,32 @@ function MyApp({ Component, pageProps, router }) {
     }
   }, [])
 
+  useEffect(() => {
+    const fathomSiteId = process.env.NEXT_JS_FATHOM_SITE_ID
+
+    if (fathomSiteId) {
+      Fathom.load(process.env.NEXT_JS_FATHOM_SITE_ID, {
+        url: 'https://goose.pooltogether.com/script.js',
+        includedDomains: [
+          'pooltogether.com',
+          'www.pooltogether.com',
+        ]
+      })
+
+      function onRouteChangeComplete(url) {
+        if (window['fathom']) {
+          window['fathom'].trackPageview()
+        }
+      }
+
+      router.events.on('routeChangeComplete', onRouteChangeComplete)
+
+      return () => {
+        router.events.off('routeChangeComplete', onRouteChangeComplete)
+      }
+    }
+  }, [])
+
   // useEffect(() => {
   //   const initi18next = async () => {
   //     await i18next.initPromise.then(() => {
@@ -70,42 +94,38 @@ function MyApp({ Component, pageProps, router }) {
   // }
   
   return <>
-    <V3ApolloWrapper>
-      <AllContextProviders>
-        <Layout
-          props={pageProps}
-        >
-          {/* <AnimatePresence
-            exitBeforeEnter
-            onExitComplete={() => {
-              setTimeout(() => {
-                const elem = document.getElementById('content-animation-wrapper')
-                
-                // in case the animation failed
-                elem.style.opacity = '1'
-              }, 300)
-              
-            }}
-          > */}
-            {/* <motion.div
-              id='content-animation-wrapper'
-              key={router.route}
-              initial={{
-                opacity: 0
-              }}
-              exit={{
-                opacity: 0
-              }}
-              animate={{
-                opacity: 1
-              }}
-            > */}
-              <Component {...pageProps} />
-            {/* </motion.div> */}
-          {/* </AnimatePresence> */}
-        </Layout>
-      </AllContextProviders>
-    </V3ApolloWrapper>
+    <Layout
+      props={pageProps}
+    >
+      {/* <AnimatePresence
+        exitBeforeEnter
+        onExitComplete={() => {
+          setTimeout(() => {
+            const elem = document.getElementById('content-animation-wrapper')
+            
+            // in case the animation failed
+            elem.style.opacity = '1'
+          }, 300)
+          
+        }}
+      > */}
+        {/* <motion.div
+          id='content-animation-wrapper'
+          key={router.route}
+          initial={{
+            opacity: 0
+          }}
+          exit={{
+            opacity: 0
+          }}
+          animate={{
+            opacity: 1
+          }}
+        > */}
+          <Component {...pageProps} />
+        {/* </motion.div> */}
+      {/* </AnimatePresence> */}
+    </Layout>
 
     <ToastContainer
       className='pool-toast'
